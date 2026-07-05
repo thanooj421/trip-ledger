@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Open read/write so all 6 friends can use the app with no login.
+    // IMPORTANT: this means anyone who finds your Firebase project ID
+    // (visible in your site's JS bundle, not actually secret) could also
+    // read or write this data. That's an acceptable trade-off for a
+    // friends-only trip ledger with no sensitive personal data, but don't
+    // reuse this project/rules for anything sensitive.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

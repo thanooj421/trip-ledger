@@ -1,0 +1,10 @@
+{
+  "name": "trip-ledger-root",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix trip-ledger run start",
+    "dev": "npm --prefix trip-ledger run dev",
+    "build": "npm --prefix trip-ledger run build",
+    "preview": "npm --prefix trip-ledger run preview"
+  }
+}
