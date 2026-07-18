@@ -96,7 +96,10 @@ async function processProofFile(file) {
   const raw = await readFileAsDataUrl(file);
   let dataUrl = raw;
   if (file.type.startsWith("image/")) {
-    dataUrl = await compressImage(raw);
+    // Avoid slow canvas compression for already-small photos.
+    if (file.size > 350 * 1024 || raw.length > 700 * 1024) {
+      dataUrl = await compressImage(raw);
+    }
   }
   if (dataUrl.length > 700 * 1024) {
     throw new Error(
