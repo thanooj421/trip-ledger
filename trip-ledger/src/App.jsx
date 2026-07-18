@@ -630,7 +630,7 @@ function ProofModal({ record, onClose }) {
    MAIN APP
 --------------------------------------------------------- */
 export default function App() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState(null);
   const [deposits, setDeposits] = useState({});
   const [spends, setSpends] = useState([]);
@@ -660,37 +660,42 @@ export default function App() {
     let unsubDeposits = () => {};
     let unsubSpends = () => {};
 
-    try {
-      unsubConfig = onSnapshot(
-        doc(db, "config", "trip"),
-        (snap) => {
-          setConfig(snap.exists() ? snap.data() : null);
-          setLoading(false);
-        },
-        () => setLoading(false),
-      );
+    const startSubscriptions = () => {
+      try {
+        unsubConfig = onSnapshot(
+          doc(db, "config", "trip"),
+          (snap) => {
+            setConfig(snap.exists() ? snap.data() : null);
+            setLoading(false);
+          },
+          () => setLoading(false),
+        );
 
-      unsubDeposits = onSnapshot(collection(db, "deposits"), (snap) => {
-        const obj = {};
-        snap.forEach((d) => {
-          obj[d.id] = d.data().amount || 0;
+        unsubDeposits = onSnapshot(collection(db, "deposits"), (snap) => {
+          const obj = {};
+          snap.forEach((d) => {
+            obj[d.id] = d.data().amount || 0;
+          });
+          setDeposits(obj);
         });
-        setDeposits(obj);
-      });
 
-      const spendsQuery = query(
-        collection(db, "spends"),
-        orderBy("timestamp", "desc"),
-      );
-      unsubSpends = onSnapshot(spendsQuery, (snap) => {
-        setSpends(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      });
-    } catch (err) {
-      console.error("Could not connect to Firestore:", err);
-      setLoading(false);
-    }
+        const spendsQuery = query(
+          collection(db, "spends"),
+          orderBy("timestamp", "desc"),
+        );
+        unsubSpends = onSnapshot(spendsQuery, (snap) => {
+          setSpends(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        });
+      } catch (err) {
+        console.error("Could not connect to Firestore:", err);
+        setLoading(false);
+      }
+    };
+
+    const timer = window.setTimeout(startSubscriptions, 0);
 
     return () => {
+      window.clearTimeout(timer);
       unsubConfig();
       unsubDeposits();
       unsubSpends();
