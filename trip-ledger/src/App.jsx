@@ -115,6 +115,19 @@ async function processProofFile(file) {
   };
 }
 
+function withTimeout(
+  promise,
+  ms,
+  timeoutMessage = "Request timed out. Check your connection and try again.",
+) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      window.setTimeout(() => reject(new Error(timeoutMessage)), ms),
+    ),
+  ]);
+}
+
 /* ---------------------------------------------------------
    STYLES (same travel-ledger look as before)
 --------------------------------------------------------- */
@@ -431,15 +444,14 @@ function SpendFormModal({ me, isAdmin, onClose, onSubmit }) {
       });
       if (!ok) {
         setErr("Couldn't save — check your connection and try again.");
-        setBusy(false);
         return;
       }
     } catch (e) {
       setErr(e.message || "Something went wrong saving this spend.");
-      setBusy(false);
       return;
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   return (
@@ -742,19 +754,23 @@ export default function App() {
 
   const submitSpend = async ({ amount, description, type, proof }) => {
     try {
-      await addDoc(collection(db, "spends"), {
-        member: me,
-        amount,
-        description,
-        type,
-        proofData: proof?.dataUrl || null,
-        proofMime: proof?.mime || null,
-        proofName: proof?.name || null,
-        timestamp: new Date().toISOString(),
-      });
+      await withTimeout(
+        addDoc(collection(db, "spends"), {
+          member: me,
+          amount,
+          description,
+          type,
+          proofData: proof?.dataUrl || null,
+          proofMime: proof?.mime || null,
+          proofName: proof?.name || null,
+          timestamp: new Date().toISOString(),
+        }),
+        15000,
+      );
       setShowSpendForm(false);
       return true;
-    } catch {
+    } catch (err) {
+      console.error("Save spend failed:", err);
       return false;
     }
   };
