@@ -1,12 +1,34 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  doc, onSnapshot, setDoc, addDoc, collection, query, orderBy,
+  doc,
+  onSnapshot,
+  setDoc,
+  addDoc,
+  collection,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "./firebase.js";
 import {
-  Plane, Wallet, Receipt, Upload, Plus, X, Shield, User, Clock,
-  FileText, Image as ImageIcon, Check, AlertCircle, Eye, Pencil,
-  Settings, ChevronRight, Loader2, WifiOff,
+  Plane,
+  Wallet,
+  Receipt,
+  Upload,
+  Plus,
+  X,
+  Shield,
+  User,
+  Clock,
+  FileText,
+  Image as ImageIcon,
+  Check,
+  AlertCircle,
+  Eye,
+  Pencil,
+  Settings,
+  ChevronRight,
+  Loader2,
+  WifiOff,
 } from "lucide-react";
 
 /* ---------------------------------------------------------
@@ -31,8 +53,11 @@ const fmt = (n) =>
 const fmtDateTime = (iso) => {
   const d = new Date(iso);
   return d.toLocaleString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -77,10 +102,14 @@ async function processProofFile(file) {
     throw new Error(
       file.type === "application/pdf"
         ? "This PDF is too large (over ~500KB). Try a smaller/scanned-lighter file."
-        : "This file is too large even after compression. Try a different photo."
+        : "This file is too large even after compression. Try a different photo.",
     );
   }
-  return { dataUrl, mime: file.type || "application/octet-stream", name: file.name };
+  return {
+    dataUrl,
+    mime: file.type || "application/octet-stream",
+    name: file.name,
+  };
 }
 
 /* ---------------------------------------------------------
@@ -88,7 +117,7 @@ async function processProofFile(file) {
 --------------------------------------------------------- */
 const GlobalStyle = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+    
 
     * { box-sizing: border-box; }
     body { margin:0; }
@@ -189,7 +218,9 @@ const GlobalStyle = () => (
 --------------------------------------------------------- */
 function SetupScreen({ initial, onSave, onCancel }) {
   const [tripName, setTripName] = useState(initial?.tripName || "");
-  const [names, setNames] = useState(initial?.members || ["", "", "", "", "", ""]);
+  const [names, setNames] = useState(
+    initial?.members || ["", "", "", "", "", ""],
+  );
   const [admin, setAdmin] = useState(initial?.admin || "");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -202,20 +233,45 @@ function SetupScreen({ initial, onSave, onCancel }) {
 
   const submit = async () => {
     const cleaned = names.map((n) => n.trim()).filter(Boolean);
-    if (cleaned.length !== 6) { setErr("Enter all 6 friends' names."); return; }
-    if (new Set(cleaned.map((n) => n.toLowerCase())).size !== 6) { setErr("Names must be unique."); return; }
-    if (!admin || !cleaned.includes(admin)) { setErr("Pick who's holding the money (admin) from the list."); return; }
-    if (!tripName.trim()) { setErr("Give the trip a name."); return; }
+    if (cleaned.length !== 6) {
+      setErr("Enter all 6 friends' names.");
+      return;
+    }
+    if (new Set(cleaned.map((n) => n.toLowerCase())).size !== 6) {
+      setErr("Names must be unique.");
+      return;
+    }
+    if (!admin || !cleaned.includes(admin)) {
+      setErr("Pick who's holding the money (admin) from the list.");
+      return;
+    }
+    if (!tripName.trim()) {
+      setErr("Give the trip a name.");
+      return;
+    }
     setErr("");
     setBusy(true);
-    const ok = await onSave({ tripName: tripName.trim(), members: cleaned, admin });
+    const ok = await onSave({
+      tripName: tripName.trim(),
+      members: cleaned,
+      admin,
+    });
     setBusy(false);
-    if (!ok) setErr("Couldn't save — check your internet connection and try again.");
+    if (!ok)
+      setErr("Couldn't save — check your internet connection and try again.");
   };
 
   return (
     <div className="tl-container" style={{ paddingTop: 26 }}>
-      <h2 className="tl-display" style={{ fontSize: 20, fontWeight: 800, color: "#16243A", marginBottom: 4 }}>
+      <h2
+        className="tl-display"
+        style={{
+          fontSize: 20,
+          fontWeight: 800,
+          color: "#16243A",
+          marginBottom: 4,
+        }}
+      >
         Set up the trip
       </h2>
       <p style={{ fontSize: 13, color: "#7C7158", marginBottom: 18 }}>
@@ -224,34 +280,65 @@ function SetupScreen({ initial, onSave, onCancel }) {
 
       <div className="tl-field">
         <label className="tl-label">Trip name</label>
-        <input className="tl-input" value={tripName} onChange={(e) => setTripName(e.target.value)} placeholder="e.g. Goa 2026" />
+        <input
+          className="tl-input"
+          value={tripName}
+          onChange={(e) => setTripName(e.target.value)}
+          placeholder="e.g. Goa 2026"
+        />
       </div>
 
       <label className="tl-label">The 6 friends</label>
       {names.map((n, i) => (
         <div className="tl-setup-input-row" key={i}>
-          <input className="tl-input" value={n} onChange={(e) => updateName(i, e.target.value)} placeholder={`Friend ${i + 1}`} />
+          <input
+            className="tl-input"
+            value={n}
+            onChange={(e) => updateName(i, e.target.value)}
+            placeholder={`Friend ${i + 1}`}
+          />
         </div>
       ))}
 
       <div className="tl-field" style={{ marginTop: 14 }}>
         <label className="tl-label">Who's holding the money? (admin)</label>
-        <select className="tl-select" value={admin} onChange={(e) => setAdmin(e.target.value)}>
+        <select
+          className="tl-select"
+          value={admin}
+          onChange={(e) => setAdmin(e.target.value)}
+        >
           <option value="">Choose admin</option>
-          {names.filter((n) => n.trim()).map((n, i) => (
-            <option key={i} value={n.trim()}>{n.trim()}</option>
-          ))}
+          {names
+            .filter((n) => n.trim())
+            .map((n, i) => (
+              <option key={i} value={n.trim()}>
+                {n.trim()}
+              </option>
+            ))}
         </select>
       </div>
 
-      {err && <div className="tl-error"><AlertCircle size={14} />{err}</div>}
+      {err && (
+        <div className="tl-error">
+          <AlertCircle size={14} />
+          {err}
+        </div>
+      )}
 
       <button className="tl-submit-btn" onClick={submit} disabled={busy}>
-        {busy ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <Check size={16} />}
+        {busy ? (
+          <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+        ) : (
+          <Check size={16} />
+        )}
         Save trip setup
       </button>
       {onCancel && (
-        <button className="tl-link-btn" style={{ color: "#7C7158", marginTop: 12, display: "block" }} onClick={onCancel}>
+        <button
+          className="tl-link-btn"
+          style={{ color: "#7C7158", marginTop: 12, display: "block" }}
+          onClick={onCancel}
+        >
           Cancel
         </button>
       )}
@@ -264,11 +351,24 @@ function SetupScreen({ initial, onSave, onCancel }) {
 --------------------------------------------------------- */
 function IdentityModal({ members, onPick, onClose, dismissible }) {
   return (
-    <div className="tl-overlay" onClick={(e) => { if (e.target === e.currentTarget && dismissible) onClose(); }}>
+    <div
+      className="tl-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && dismissible) onClose();
+      }}
+    >
       <div className="tl-modal">
         <div className="tl-modal-title">
           Who are you?
-          {dismissible && <button className="tl-pencil" style={{ position: "static" }} onClick={onClose}><X size={18} /></button>}
+          {dismissible && (
+            <button
+              className="tl-pencil"
+              style={{ position: "static" }}
+              onClick={onClose}
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
         <p style={{ fontSize: 12.5, color: "#7C7158", marginBottom: 10 }}>
           This just tags entries as yours on this device — no password needed.
@@ -307,8 +407,14 @@ function SpendFormModal({ me, isAdmin, onClose, onSubmit }) {
 
   const submit = async () => {
     const amt = parseFloat(amount);
-    if (!amt || amt <= 0) { setErr("Enter a valid amount."); return; }
-    if (!description.trim()) { setErr("Add a short description."); return; }
+    if (!amt || amt <= 0) {
+      setErr("Enter a valid amount.");
+      return;
+    }
+    if (!description.trim()) {
+      setErr("Add a short description.");
+      return;
+    }
     setErr("");
     setBusy(true);
     try {
@@ -334,60 +440,137 @@ function SpendFormModal({ me, isAdmin, onClose, onSubmit }) {
   };
 
   return (
-    <div className="tl-overlay" onClick={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
+    <div
+      className="tl-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
       <div className="tl-modal">
         <div className="tl-modal-title">
           Add a spend
-          <button className="tl-pencil" style={{ position: "static" }} onClick={onClose} disabled={busy}><X size={18} /></button>
+          <button
+            className="tl-pencil"
+            style={{ position: "static" }}
+            onClick={onClose}
+            disabled={busy}
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <div className="tl-field">
           <label className="tl-label">Amount spent (₹)</label>
-          <input className="tl-input tl-mono" type="number" inputMode="decimal" value={amount}
-            onChange={(e) => setAmount(e.target.value)} placeholder="0" />
+          <input
+            className="tl-input tl-mono"
+            type="number"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0"
+          />
         </div>
 
         <div className="tl-field">
           <label className="tl-label">What was it for?</label>
-          <textarea className="tl-textarea" value={description} onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. Auto fare from airport to hotel" />
+          <textarea
+            className="tl-textarea"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. Auto fare from airport to hotel"
+          />
         </div>
 
         {isAdmin && (
           <div className="tl-field">
             <label className="tl-label">Where did this money come from?</label>
             <div className="tl-radio-row">
-              <div className={`tl-radio-opt ${type === "personal" ? "active" : ""}`} onClick={() => setType("personal")}>My own money</div>
-              <div className={`tl-radio-opt ${type === "pool" ? "active" : ""}`} onClick={() => setType("pool")}>Trip pool (collected)</div>
+              <div
+                className={`tl-radio-opt ${type === "personal" ? "active" : ""}`}
+                onClick={() => setType("personal")}
+              >
+                My own money
+              </div>
+              <div
+                className={`tl-radio-opt ${type === "pool" ? "active" : ""}`}
+                onClick={() => setType("pool")}
+              >
+                Trip pool (collected)
+              </div>
             </div>
           </div>
         )}
 
         <div className="tl-field">
-          <label className="tl-label">Proof (photo, bill screenshot or PDF)</label>
-          <input ref={fileInputRef} type="file" accept="image/*,.pdf,application/pdf" style={{ display: "none" }} onChange={handleFile} />
-          <div className={`tl-upload-box ${file ? "has-file" : ""}`} onClick={() => fileInputRef.current?.click()}>
+          <label className="tl-label">
+            Proof (photo, bill screenshot or PDF)
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf,application/pdf"
+            style={{ display: "none" }}
+            onChange={handleFile}
+          />
+          <div
+            className={`tl-upload-box ${file ? "has-file" : ""}`}
+            onClick={() => fileInputRef.current?.click()}
+          >
             {file ? (
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                {file.type === "application/pdf" ? <FileText size={16} /> : <ImageIcon size={16} />} {fileLabel}
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                {file.type === "application/pdf" ? (
+                  <FileText size={16} />
+                ) : (
+                  <ImageIcon size={16} />
+                )}{" "}
+                {fileLabel}
               </span>
             ) : (
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
                 <Upload size={16} /> Tap to upload proof
               </span>
             )}
           </div>
-          <div className="tl-helptext">Optional, but recommended. Images are compressed automatically; PDFs should be under ~500KB.</div>
+          <div className="tl-helptext">
+            Optional, but recommended. Images are compressed automatically; PDFs
+            should be under ~500KB.
+          </div>
         </div>
 
         <div className="tl-helptext" style={{ marginBottom: 4 }}>
           Logged as: <strong>{me}</strong> · timestamp added automatically
         </div>
 
-        {err && <div className="tl-error"><AlertCircle size={14} />{err}</div>}
+        {err && (
+          <div className="tl-error">
+            <AlertCircle size={14} />
+            {err}
+          </div>
+        )}
 
         <button className="tl-submit-btn" onClick={submit} disabled={busy}>
-          {busy ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={16} />}
+          {busy ? (
+            <Loader2
+              size={16}
+              style={{ animation: "spin 1s linear infinite" }}
+            />
+          ) : (
+            <Plus size={16} />
+          )}
           {busy ? "Saving..." : "Save spend"}
         </button>
       </div>
@@ -401,18 +584,42 @@ function SpendFormModal({ me, isAdmin, onClose, onSubmit }) {
 --------------------------------------------------------- */
 function ProofModal({ record, onClose }) {
   return (
-    <div className="tl-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      className="tl-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="tl-modal">
         <div className="tl-modal-title">
           Proof
-          <button className="tl-pencil" style={{ position: "static" }} onClick={onClose}><X size={18} /></button>
+          <button
+            className="tl-pencil"
+            style={{ position: "static" }}
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
         </div>
         {record.proofMime === "application/pdf" ? (
-          <a className="tl-submit-btn" style={{ textDecoration: "none" }} href={record.proofData} download={record.proofName || "proof.pdf"}>
+          <a
+            className="tl-submit-btn"
+            style={{ textDecoration: "none" }}
+            href={record.proofData}
+            download={record.proofName || "proof.pdf"}
+          >
             <FileText size={16} /> Open / download {record.proofName || "PDF"}
           </a>
         ) : (
-          <img src={record.proofData} alt="Proof" style={{ width: "100%", borderRadius: 10, border: "1px solid #EAE1CC" }} />
+          <img
+            src={record.proofData}
+            alt="Proof"
+            style={{
+              width: "100%",
+              borderRadius: 10,
+              border: "1px solid #EAE1CC",
+            }}
+          />
         )}
       </div>
     </div>
@@ -436,7 +643,9 @@ export default function App() {
   const [editingDepositFor, setEditingDepositFor] = useState(null);
   const [depositDraft, setDepositDraft] = useState("");
   const [depositError, setDepositError] = useState("");
-  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [online, setOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true,
+  );
 
   // Identity lives in this browser only.
   useEffect(() => {
@@ -447,23 +656,36 @@ export default function App() {
   // Real-time Firestore subscriptions — every connected friend sees
   // updates within roughly a second, no polling involved.
   useEffect(() => {
-    const unsubConfig = onSnapshot(doc(db, "config", "trip"), (snap) => {
-      setConfig(snap.exists() ? snap.data() : null);
-      setLoading(false);
-    }, () => setLoading(false));
+    const unsubConfig = onSnapshot(
+      doc(db, "config", "trip"),
+      (snap) => {
+        setConfig(snap.exists() ? snap.data() : null);
+        setLoading(false);
+      },
+      () => setLoading(false),
+    );
 
     const unsubDeposits = onSnapshot(collection(db, "deposits"), (snap) => {
       const obj = {};
-      snap.forEach((d) => { obj[d.id] = d.data().amount || 0; });
+      snap.forEach((d) => {
+        obj[d.id] = d.data().amount || 0;
+      });
       setDeposits(obj);
     });
 
-    const spendsQuery = query(collection(db, "spends"), orderBy("timestamp", "desc"));
+    const spendsQuery = query(
+      collection(db, "spends"),
+      orderBy("timestamp", "desc"),
+    );
     const unsubSpends = onSnapshot(spendsQuery, (snap) => {
       setSpends(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
 
-    return () => { unsubConfig(); unsubDeposits(); unsubSpends(); };
+    return () => {
+      unsubConfig();
+      unsubDeposits();
+      unsubSpends();
+    };
   }, []);
 
   useEffect(() => {
@@ -494,7 +716,10 @@ export default function App() {
   };
 
   const requireIdentity = (then) => {
-    if (!me) { setShowIdentity(true); return; }
+    if (!me) {
+      setShowIdentity(true);
+      return;
+    }
     then();
   };
 
@@ -546,22 +771,33 @@ export default function App() {
         <GlobalStyle />
         <div className="tl-header">
           <div className="tl-header-row">
-            <div className="tl-title"><Plane size={20} /> Trip Ledger</div>
+            <div className="tl-title">
+              <Plane size={20} /> Trip Ledger
+            </div>
           </div>
         </div>
-        <SetupScreen initial={config} onSave={saveConfig} onCancel={config ? () => setShowSetup(false) : null} />
+        <SetupScreen
+          initial={config}
+          onSave={saveConfig}
+          onCancel={config ? () => setShowSetup(false) : null}
+        />
       </div>
     );
   }
 
   const isAdmin = me === config.admin;
-  const totalCollected = config.members.reduce((s, m) => s + (deposits[m] || 0), 0);
+  const totalCollected = config.members.reduce(
+    (s, m) => s + (deposits[m] || 0),
+    0,
+  );
   const poolSpends = spends.filter((s) => s.type === "pool");
   const totalPoolSpent = poolSpends.reduce((s, r) => s + r.amount, 0);
   const poolRemaining = totalCollected - totalPoolSpent;
 
   const memberPersonalTotal = (m) =>
-    spends.filter((s) => s.member === m && s.type === "personal").reduce((a, r) => a + r.amount, 0);
+    spends
+      .filter((s) => s.member === m && s.type === "personal")
+      .reduce((a, r) => a + r.amount, 0);
 
   return (
     <div className="tl-root">
@@ -569,21 +805,33 @@ export default function App() {
 
       {!online && (
         <div className="tl-offline-banner">
-          <WifiOff size={13} /> Offline — your entries will save automatically once you're back online
+          <WifiOff size={13} /> Offline — your entries will save automatically
+          once you're back online
         </div>
       )}
 
       <div className="tl-header">
         <div className="tl-header-row">
           <div>
-            <div className="tl-title"><Plane size={20} /> {config.tripName}</div>
-            <div className="tl-sub">{config.members.length} travelers · {config.admin} is holding the pool</div>
+            <div className="tl-title">
+              <Plane size={20} /> {config.tripName}
+            </div>
+            <div className="tl-sub">
+              {config.members.length} travelers · {config.admin} is holding the
+              pool
+            </div>
           </div>
-          <div className="tl-identity-chip" onClick={() => setShowIdentity(true)}>
+          <div
+            className="tl-identity-chip"
+            onClick={() => setShowIdentity(true)}
+          >
             <User size={14} /> {me || "Pick you"}
           </div>
         </div>
-        <div className="tl-sync-text"><span className="tl-live-dot" /> Live — updates from everyone appear automatically</div>
+        <div className="tl-sync-text">
+          <span className="tl-live-dot" /> Live — updates from everyone appear
+          automatically
+        </div>
       </div>
 
       <div className="tl-container">
@@ -602,35 +850,83 @@ export default function App() {
           </div>
         </div>
 
-        <div className="tl-section-title"><Wallet size={16} /> Travelers</div>
+        <div className="tl-section-title">
+          <Wallet size={16} /> Travelers
+        </div>
         <div className="tl-tag-grid">
           {config.members.map((m) => {
             const canEdit = me === m || isAdmin;
             return (
               <div className="tl-tag" key={m}>
                 {canEdit && (
-                  <button className="tl-pencil" onClick={() => { setEditingDepositFor(m); setDepositDraft(String(deposits[m] || "")); setDepositError(""); }}>
+                  <button
+                    className="tl-pencil"
+                    onClick={() => {
+                      setEditingDepositFor(m);
+                      setDepositDraft(String(deposits[m] || ""));
+                      setDepositError("");
+                    }}
+                  >
                     <Pencil size={13} />
                   </button>
                 )}
                 <div className="tl-tag-name">
                   {m}
-                  {m === config.admin && <span className="tl-tag-admin-badge"><Shield size={9} /> Admin</span>}
+                  {m === config.admin && (
+                    <span className="tl-tag-admin-badge">
+                      <Shield size={9} /> Admin
+                    </span>
+                  )}
                 </div>
 
                 {editingDepositFor === m ? (
                   <div>
                     <div className="tl-tag-edit">
-                      <input className="tl-mono" type="number" value={depositDraft} onChange={(e) => setDepositDraft(e.target.value)} autoFocus />
-                      <button className="tl-icon-btn" onClick={() => saveDepositEdit(m)}><Check size={14} /></button>
-                      <button className="tl-icon-btn" style={{ background: "#9A9078" }} onClick={() => { setEditingDepositFor(null); setDepositError(""); }}><X size={14} /></button>
+                      <input
+                        className="tl-mono"
+                        type="number"
+                        value={depositDraft}
+                        onChange={(e) => setDepositDraft(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="tl-icon-btn"
+                        onClick={() => saveDepositEdit(m)}
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        className="tl-icon-btn"
+                        style={{ background: "#9A9078" }}
+                        onClick={() => {
+                          setEditingDepositFor(null);
+                          setDepositError("");
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
-                    {depositError && <div className="tl-error" style={{ marginTop: 6 }}><AlertCircle size={12} />{depositError}</div>}
+                    {depositError && (
+                      <div className="tl-error" style={{ marginTop: 6 }}>
+                        <AlertCircle size={12} />
+                        {depositError}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
-                    <div className="tl-tag-row"><span>Deposited to pool</span><span className="tl-tag-amt">{fmt(deposits[m] || 0)}</span></div>
-                    <div className="tl-tag-row"><span>Personal spends</span><span className="tl-tag-amt" style={{ color: "#16243A" }}>{fmt(memberPersonalTotal(m))}</span></div>
+                    <div className="tl-tag-row">
+                      <span>Deposited to pool</span>
+                      <span className="tl-tag-amt">
+                        {fmt(deposits[m] || 0)}
+                      </span>
+                    </div>
+                    <div className="tl-tag-row">
+                      <span>Personal spends</span>
+                      <span className="tl-tag-amt" style={{ color: "#16243A" }}>
+                        {fmt(memberPersonalTotal(m))}
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
@@ -638,23 +934,38 @@ export default function App() {
           })}
         </div>
 
-        <div className="tl-section-title"><Receipt size={16} /> All spends</div>
-        {spends.length === 0 && <div className="tl-empty">No spends logged yet. Add the first one below.</div>}
+        <div className="tl-section-title">
+          <Receipt size={16} /> All spends
+        </div>
+        {spends.length === 0 && (
+          <div className="tl-empty">
+            No spends logged yet. Add the first one below.
+          </div>
+        )}
         {spends.map((r) => (
           <div className={`tl-feed-item ${r.type}`} key={r.id}>
             <div className="tl-feed-main">
               <div className="tl-feed-top">
                 <div className="tl-feed-who">
                   {r.member}
-                  <span className={`tl-feed-badge ${r.type}`}>{r.type === "pool" ? "From pool" : "Personal"}</span>
+                  <span className={`tl-feed-badge ${r.type}`}>
+                    {r.type === "pool" ? "From pool" : "Personal"}
+                  </span>
                 </div>
                 <div className="tl-feed-amt">{fmt(r.amount)}</div>
               </div>
               <div className="tl-feed-desc">{r.description}</div>
               <div className="tl-feed-bottom">
-                <div className="tl-feed-time"><Clock size={11} /> {fmtDateTime(r.timestamp)}</div>
+                <div className="tl-feed-time">
+                  <Clock size={11} /> {fmtDateTime(r.timestamp)}
+                </div>
                 {r.proofData && (
-                  <button className="tl-proof-btn" onClick={() => setViewProof(r)}><Eye size={12} /> Proof</button>
+                  <button
+                    className="tl-proof-btn"
+                    onClick={() => setViewProof(r)}
+                  >
+                    <Eye size={12} /> Proof
+                  </button>
                 )}
               </div>
             </div>
@@ -662,25 +973,45 @@ export default function App() {
         ))}
 
         {isAdmin && (
-          <button className="tl-link-btn" style={{ color: "#7C7158", marginTop: 18 }} onClick={() => setShowSetup(true)}>
-            <Settings size={11} style={{ marginRight: 4, verticalAlign: -1 }} /> Edit trip setup
+          <button
+            className="tl-link-btn"
+            style={{ color: "#7C7158", marginTop: 18 }}
+            onClick={() => setShowSetup(true)}
+          >
+            <Settings size={11} style={{ marginRight: 4, verticalAlign: -1 }} />{" "}
+            Edit trip setup
           </button>
         )}
       </div>
 
-      <button className="tl-fab" onClick={() => requireIdentity(() => setShowSpendForm(true))}>
+      <button
+        className="tl-fab"
+        onClick={() => requireIdentity(() => setShowSpendForm(true))}
+      >
         <Plus size={18} /> Add spend
       </button>
 
       {showIdentity && (
-        <IdentityModal members={config.members} onPick={pickIdentity} onClose={() => setShowIdentity(false)} dismissible={!!me} />
+        <IdentityModal
+          members={config.members}
+          onPick={pickIdentity}
+          onClose={() => setShowIdentity(false)}
+          dismissible={!!me}
+        />
       )}
 
       {showSpendForm && me && (
-        <SpendFormModal me={me} isAdmin={isAdmin} onClose={() => setShowSpendForm(false)} onSubmit={submitSpend} />
+        <SpendFormModal
+          me={me}
+          isAdmin={isAdmin}
+          onClose={() => setShowSpendForm(false)}
+          onSubmit={submitSpend}
+        />
       )}
 
-      {viewProof && <ProofModal record={viewProof} onClose={() => setViewProof(null)} />}
+      {viewProof && (
+        <ProofModal record={viewProof} onClose={() => setViewProof(null)} />
+      )}
     </div>
   );
 }
