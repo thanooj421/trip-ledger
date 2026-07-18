@@ -1,8 +1,5 @@
-import { initializeApp } from "firebase/app";
-import {
-  initializeFirestore,
-  enableIndexedDbPersistence,
-} from "firebase/firestore";
+import { initializeApp, getApps } from "firebase/app";
+import { initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,15 +16,9 @@ if (missing.length) {
   console.error(
     "Missing Firebase config values:",
     missing.map(([k]) => k).join(", "),
-    "\nCopy .env.example to .env.local (for local dev) or set the matching GitHub Actions secrets (for deployment)."
+    "\nCopy .env.example to .env.local (for local dev) or set the matching GitHub Actions secrets (for deployment).",
   );
 }
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const db = initializeFirestore(app, {});
-
-// Lets the app keep working (read cached data, queue writes) when a phone
-// briefly loses signal on the trip; queued writes sync automatically once
-// back online. Fails quietly if multiple tabs are open in the same browser,
-// which is fine — it just falls back to online-only behavior in that tab.
-enableIndexedDbPersistence(db).catch(() => {});

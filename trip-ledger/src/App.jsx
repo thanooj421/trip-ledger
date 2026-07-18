@@ -656,30 +656,39 @@ export default function App() {
   // Real-time Firestore subscriptions — every connected friend sees
   // updates within roughly a second, no polling involved.
   useEffect(() => {
-    const unsubConfig = onSnapshot(
-      doc(db, "config", "trip"),
-      (snap) => {
-        setConfig(snap.exists() ? snap.data() : null);
-        setLoading(false);
-      },
-      () => setLoading(false),
-    );
+    let unsubConfig = () => {};
+    let unsubDeposits = () => {};
+    let unsubSpends = () => {};
 
-    const unsubDeposits = onSnapshot(collection(db, "deposits"), (snap) => {
-      const obj = {};
-      snap.forEach((d) => {
-        obj[d.id] = d.data().amount || 0;
+    try {
+      unsubConfig = onSnapshot(
+        doc(db, "config", "trip"),
+        (snap) => {
+          setConfig(snap.exists() ? snap.data() : null);
+          setLoading(false);
+        },
+        () => setLoading(false),
+      );
+
+      unsubDeposits = onSnapshot(collection(db, "deposits"), (snap) => {
+        const obj = {};
+        snap.forEach((d) => {
+          obj[d.id] = d.data().amount || 0;
+        });
+        setDeposits(obj);
       });
-      setDeposits(obj);
-    });
 
-    const spendsQuery = query(
-      collection(db, "spends"),
-      orderBy("timestamp", "desc"),
-    );
-    const unsubSpends = onSnapshot(spendsQuery, (snap) => {
-      setSpends(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    });
+      const spendsQuery = query(
+        collection(db, "spends"),
+        orderBy("timestamp", "desc"),
+      );
+      unsubSpends = onSnapshot(spendsQuery, (snap) => {
+        setSpends(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      });
+    } catch (err) {
+      console.error("Could not connect to Firestore:", err);
+      setLoading(false);
+    }
 
     return () => {
       unsubConfig();
